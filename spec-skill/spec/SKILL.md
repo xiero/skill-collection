@@ -2,7 +2,6 @@
 name: spec
 description: Create a feature spec file and feature branch from a short idea. Use when the user wants to draft a new feature specification, plan out a feature before implementation, or scaffold a new branch with a structured spec document. Aligns the spec with the project's authoritative specification documents (CLAUDE.md, architecture.md, DAEMON_COMMUNICATION_PROTOCOL.md, system_requirements_daemon_*.csv).
 argument-hint: A one-sentence to one-paragraph feature description. Include enough context for the spec to be written without guessing.
-disable-model-invocation: true
 allowed-tools: Read, Write, Glob, Bash(git status:*), Bash(git branch:*), Bash(git switch:*), Bash(git rev-parse:*)
 ---
 
@@ -47,9 +46,9 @@ Otherwise, derive three values:
      - maximum length 40 characters
    - Example: `card-component-for-dashboard-stats`
 
-3. **`branch_name`** — `claude/feature/<feature_slug>`
+3. **`branch_name`** — `feature/<feature_slug>`
    
-   - Example: `claude/feature/card-component-for-dashboard-stats`
+   - Example: `feature/card-component-for-dashboard-stats`
 
 If you cannot derive a sensible `feature_title` and `feature_slug` from the input, **stop and ask the user** to clarify. Do not invent a feature scope that was not described.
 

@@ -1,6 +1,6 @@
 # Spec Skill
 
-A Claude Code / Claude.ai skill that turns a short feature idea into a structured spec file and a feature branch, aligned with the project's authoritative specification documents.
+A skill that turns a short feature idea into a structured spec file and a feature branch, aligned with the project's authoritative specification documents.
 
 ## What it does
 
@@ -17,15 +17,7 @@ The skill **only writes a spec file and creates a branch**. It does not modify s
 
 ## Installation
 
-Copy the entire `spec/` directory into one of these locations:
-
-- **Project scope:** `<repo-root>/.claude/skills/spec/`
-  Available only inside this project. Commit it to share with the team.
-
-- **Personal scope:** `~/.claude/skills/spec/`
-  Available across all your projects on this machine.
-
-The directory must contain both files:
+Copy the entire `spec/` directory into your skills location. The directory must contain both files:
 
 ```
 spec/
@@ -45,22 +37,22 @@ Invoke the skill explicitly with `/spec` followed by a feature description:
 /spec backend endpoint to list all connected MCU devices, with pagination
 ```
 
-The skill is configured with `disable-model-invocation: true`, so it will **never** trigger automatically — only on explicit `/spec` calls. This is intentional, because the skill creates a branch (a side effect that shouldn't happen accidentally).
-
 ## Project assumptions
 
 This skill expects the project to follow conventions defined in:
 
-- `CLAUDE.md` (at repo root) — project-wide rules
+- `AGENTS.md` or `CLAUDE.md` (at repo root) — project-wide rules
 - `architecture.md` — architectural layers and boundaries
 - `DAEMON_COMMUNICATION_PROTOCOL.md` — backend ↔ daemon contract (if applicable)
 - `system_requirements_daemon_*.csv` — system-level requirements (if applicable)
 
-If your project does not have these files, the skill still works — it will simply not consult them. For best results, make sure your `CLAUDE.md` lists the authoritative documents the skill should reference.
+If your project does not have these files, the skill still works — it will simply not consult them. For best results, make sure your project rules file lists the authoritative documents the skill should reference.
 
 ## Output
 
 Specs are written to `_specs/<feature-slug>.md` at the repo root. The directory is created if it does not exist.
+
+The created branch follows the convention `feature/<feature-slug>`, e.g. `feature/dark-mode-toggle`.
 
 ## Customizing the template
 
