@@ -1,7 +1,7 @@
 ---
 name: spec-unleashed
-description: Orchestrate the full New GUI spec-driven coding workflow from feature idea or existing _specs/*.md file to _plans/*.md, implementation, verification, and commit-ready summary. Use when the user wants to unleash the agent and avoid manual review after every phase, while still keeping safety gates for high-risk changes and final commits.
-argument-hint: A feature idea or existing _specs/<name>.md path. Optionally include mode: guided|fast|autopilot and commit: no_commit|prepare_commit|commit.
+description: "Orchestrate the full New GUI spec-driven coding workflow from feature idea or existing _specs/*.md file to _plans/*.md, implementation, verification, and commit-ready summary. Use when the user wants to unleash the agent and avoid manual review after every phase, while still keeping safety gates for high-risk changes and final commits."
+argument-hint: "A feature idea or existing _specs/<name>.md path. Optionally include mode: guided|fast|autopilot and commit: no_commit|prepare_commit|commit."
 allowed-tools: Read, Write, Edit, MultiEdit, Glob, Grep, LS, TodoWrite, Bash(git status:*), Bash(git branch:*), Bash(git switch:*), Bash(git rev-parse:*), Bash(git diff:*), Bash(git log:*), Bash(git add:*), Bash(git commit:*), Bash(npm:*), Bash(node:*), Bash(mkdir:*), Bash(pwd:*), Bash(ls:*), Bash(find:*), Bash(test:*)
 ---
 
