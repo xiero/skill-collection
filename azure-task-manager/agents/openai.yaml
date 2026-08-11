@@ -1,0 +1,14 @@
+interface:
+  display_name: "Azure Task Manager"
+  short_description: "Manage Azure DevOps tasks through MCP"
+  default_prompt: "Use $azure-task-manager to find or manage my Azure DevOps tasks through the configured MCP server."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "azure-tasks"
+      description: "Azure Task Manager MCP server"
+      transport: "stdio"
+
+policy:
+  allow_implicit_invocation: true
