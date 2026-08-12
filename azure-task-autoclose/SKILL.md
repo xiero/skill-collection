@@ -1,6 +1,6 @@
 ---
 name: azure-task-autoclose
-description: Automatically close a verified Azure DevOps Task through the configured `azure-tasks` MCP server after completing its associated code work. Use when an implementation or fix is tied to an explicit Azure Task ID, Azure work-item URL, a `task/123` or `azdo/123` branch pattern, or when the user expects Azure state to follow successful implementation. Do not use when Task identity is ambiguous or for analysis-, planning-, review-, or diagnosis-only work.
+description: Automatically close a verified Azure DevOps Task through the configured `azure-tasks` MCP server after completing its associated code work. Use when an implementation or fix is tied to an explicit Azure Task ID, Azure work-item URL, a `task/123` or `azdo/123` branch pattern, an exact import-backed repository identifier such as BHC-024, or when the user expects Azure state to follow successful implementation. Do not use when Task identity remains ambiguous or for analysis-, planning-, review-, or diagnosis-only work.
 ---
 
 # Azure Task Auto-close
@@ -9,13 +9,16 @@ Apply the `azure-task-manager` read/write protocol for every Azure operation. Us
 
 ## Retain Exact Task Identity
 
-At the start of implementation, retain the exact Task ID from one of these sources:
+At the start of implementation, retain or resolve the exact Task ID from one of these sources:
 
 - the user request or an Azure DevOps work-item URL;
 - established conversation context;
 - a branch segment beginning with `task/<id>` or `azdo/<id>`.
+- an import-backed repository identifier such as `BHC-024`, resolved by `resolve_task_reference`.
 
-Treat all other numbers as ambiguous. Never infer an Azure Task from an issue number, version, port, fuzzy title match, or repository name. If authoritative sources provide conflicting IDs, resolve the conflict before any Azure write. If no exact ID is available, finish the code work without closing a Task and report that Azure synchronization still needs the ID.
+For a repository identifier, accept only a `resolved` result containing exactly one match, then retain its Azure Task ID. On `not_found`, request a work-item ID or URL. On `ambiguous`, report the conflicting match IDs and make no write until the data conflict is resolved.
+
+Treat all other numbers as ambiguous. Never infer an Azure Task from an issue number, version, port, fuzzy title match, or repository name. If authoritative sources provide conflicting IDs, resolve the conflict before any Azure write. If no exact or exactly resolved ID is available, finish the code work without closing a Task and report that Azure synchronization still needs an unambiguous identity.
 
 ## Decide Whether to Close
 

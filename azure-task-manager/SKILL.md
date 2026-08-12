@@ -1,6 +1,6 @@
 ---
 name: azure-task-manager
-description: Manage Azure DevOps Tasks through the configured `azure-tasks` MCP server. Use for direct Task lookup, inspection, creation, editing, assignment, estimation, state changes, completion, time logging, bulk updates, and questions about valid states, activities, or iterations. Also use as the Azure read/write protocol for lifecycle workflows such as `azure-task-autoclose`. For automatic post-implementation closure tied to an explicit Task identity, use `azure-task-autoclose` together with this protocol. Never substitute Azure CLI, shell commands, or direct API calls.
+description: Manage Azure DevOps Tasks through the configured `azure-tasks` MCP server. Use for direct Task lookup, exact import-backed repository reference resolution such as BHC-024, inspection, creation, editing, assignment, estimation, state changes, completion, time logging, bulk updates, and questions about valid states, activities, or iterations. Also use as the Azure read/write protocol for lifecycle workflows such as `azure-task-autoclose`. For automatic post-implementation closure tied to an explicit or exactly resolved Task identity, use `azure-task-autoclose` together with this protocol. Never substitute Azure CLI, shell commands, or direct API calls.
 ---
 
 # Azure Task Manager
@@ -12,10 +12,12 @@ This skill owns Azure Task lookup and mutation safety. Let `azure-task-autoclose
 ## Read Tasks
 
 1. Call `get_project_context` before choosing or interpreting Azure-specific states, activities, or iterations.
-2. Use `find_tasks` for compact lists and ID resolution. Prefer its defaults for the current user's active Tasks.
-3. Use `get_task` for an exact ID when a full description or complete managed field set is needed, and immediately before a sensitive single-Task update.
-4. Treat `completedStates` from project context as authoritative. Never hardcode or invent Task IDs, states, activities, iterations, identities, or field values.
-5. Do not resolve an explicit Task ID by fuzzy title matching. If supplied identities conflict, ask which exact Task is authoritative.
+2. Use `resolve_task_reference` for an import-backed repository identifier such as `BHC-024`. Accept it as an exact Task identity only when the result is `resolved` with one match. This lookup intentionally includes completed and differently assigned Tasks.
+3. On `not_found`, request an Azure work-item ID or URL. On `ambiguous`, report the conflicting match IDs and make no write until the conflict is resolved.
+4. Use `find_tasks` for compact lists and ordinary search. Prefer its defaults for the current user's active Tasks.
+5. Use `get_task` for an exact or resolved ID when a full description or complete managed field set is needed, and immediately before a sensitive single-Task update.
+6. Treat `completedStates` from project context as authoritative. Never hardcode or invent Task IDs, states, activities, iterations, identities, or field values.
+7. Never substitute fuzzy title matching for an explicit or import-backed reference. If supplied identities conflict, ask which exact Task is authoritative.
 
 ## Write Tasks
 
