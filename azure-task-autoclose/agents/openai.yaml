@@ -1,0 +1,14 @@
+interface:
+  display_name: "Azure Task Auto-close"
+  short_description: "Close implemented Azure Tasks safely"
+  default_prompt: "Use $azure-task-autoclose to finish this implementation and close its Azure Task after verification."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "azure-tasks"
+      description: "Azure Task Manager MCP server"
+      transport: "stdio"
+
+policy:
+  allow_implicit_invocation: true

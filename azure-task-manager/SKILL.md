@@ -1,38 +1,49 @@
 ---
 name: azure-task-manager
-description: Manage Azure DevOps Tasks through the configured `azure-tasks` MCP server. Use when the user asks to find, inspect, create, edit, assign, estimate, change the state of, complete, or log time against Azure DevOps Tasks. Also use for bulk Task updates and questions about valid Task states, activities, or iterations. Do not use direct Azure CLI or shell commands for these operations.
+description: Manage Azure DevOps Tasks through the configured `azure-tasks` MCP server. Use for direct Task lookup, inspection, creation, editing, assignment, estimation, state changes, completion, time logging, bulk updates, and questions about valid states, activities, or iterations. Also use as the Azure read/write protocol for lifecycle workflows such as `azure-task-autoclose`. For automatic post-implementation closure tied to an explicit Task identity, use `azure-task-autoclose` together with this protocol. Never substitute Azure CLI, shell commands, or direct API calls.
 ---
 
 # Azure Task Manager
 
-Use only the tools exposed by the `azure-tasks` MCP server. Do not substitute `az`, shell commands, the application CLI, or direct Azure DevOps API calls. If the server or a required tool is unavailable, report that clearly and stop.
+Use only tools exposed by the `azure-tasks` MCP server for Azure operations. Let the MCP host start the configured stdio server; never launch it manually in an interactive terminal. If the server or a required tool is unavailable, report that the current agent session needs the MCP server enabled or restarted, then stop the Azure operation without using a fallback write path.
+
+This skill owns Azure Task lookup and mutation safety. Let `azure-task-autoclose` decide whether completed code work is eligible for automatic closure.
 
 ## Read Tasks
 
 1. Call `get_project_context` before choosing or interpreting Azure-specific states, activities, or iterations.
-2. Call `find_tasks` for compact task lists and to resolve task IDs. Prefer its defaults when the user asks for their active tasks.
-3. Call `get_task` only when a full description or the complete managed field set is needed.
-4. Never invent task IDs, state names, activities, iterations, or identities.
+2. Use `find_tasks` for compact lists and ID resolution. Prefer its defaults for the current user's active Tasks.
+3. Use `get_task` for an exact ID when a full description or complete managed field set is needed, and immediately before a sensitive single-Task update.
+4. Treat `completedStates` from project context as authoritative. Never hardcode or invent Task IDs, states, activities, iterations, identities, or field values.
+5. Do not resolve an explicit Task ID by fuzzy title matching. If supplied identities conflict, ask which exact Task is authoritative.
 
 ## Write Tasks
 
-Treat an unambiguous user request to mutate tasks as authorization to prepare and commit that mutation. Rely on the MCP host's write approval instead of asking for redundant confirmation. Ask a concise question only when the target or requested result is ambiguous.
+Treat an unambiguous mutation request, including an eligible automatic close, as authorization to preview and commit that mutation. Rely on the MCP host's write approval instead of asking for redundant confirmation. Ask one concise question only when the target or result is ambiguous.
 
-1. Resolve target IDs and required project values with the read tools.
-2. Create exactly one preview with the matching tool:
-   - `plan_create_task` for a new task;
+1. Resolve target IDs and required project values with read tools.
+2. Prefer `selector: { ids: [...] }` whenever exact IDs are known. Use a query selector only for an intentionally requested bulk operation.
+3. Create one preview with the matching tool:
+   - `plan_create_task` for a new Task;
    - `plan_update_tasks` for field, assignment, estimate, iteration, activity, or state changes;
-   - `plan_log_time` for Completed Work and Remaining Work changes.
-3. For creation, generate one stable `requestKey` if the user did not supply one. Keep and reuse that exact value for retries of the same request.
-4. Inspect the returned validity, item count, targets, and field diffs. Do not commit an invalid plan or a plan that affects tasks beyond the user's request.
-5. Briefly state the intended changes, then call `commit_plan` with the returned `planId`.
-6. Report created or updated task IDs and the resulting important fields concisely.
+   - `plan_log_time` for adding Completed Work and adjusting Remaining Work.
+4. For creation, generate one stable `requestKey` if none was supplied. Reuse it for every retry of the same logical request. If the preview returns `existingTask`, report it and do not call `commit_plan`.
+5. Inspect `valid`, `planId`, `itemCount`, every target ID, and every field diff. Do not commit an invalid, expired, no-op, over-broad, or otherwise unexpected plan.
+6. Briefly state the exact intended changes, then call `commit_plan` with the returned `planId` without requesting another confirmation.
+7. Check every returned item status. Report created or updated Task IDs, important resulting fields, and any per-item failures concisely.
 
-Use `discard_plan` when the user cancels a pending change or when a valid plan must intentionally be abandoned. Plans expire after 10 minutes. If an intended plan expires, create a fresh preview, inspect it again, and commit only the new `planId`.
+Use `discard_plan` when the user cancels a pending change or a valid plan must intentionally be abandoned. Plans expire after 10 minutes. When a plan expires, create and inspect a fresh preview and commit only its new `planId`.
 
-## Failure Handling
+## Complete Tasks
 
-- Surface MCP validation errors without attempting an alternate write path.
-- If a selector matches unexpected tasks, do not commit; clarify the intended target.
-- On an uncertain commit result, retry the same `commit_plan` call. For task creation, retain the original `requestKey` so retries remain idempotent.
-- Keep responses compact: use structured MCP results and avoid reproducing full descriptions unless requested.
+1. Read `completedStates` with `get_project_context`. Use a user-specified valid completed state; otherwise use the sole completed state. If multiple completed states remain plausible and no repository or conversation convention resolves them, ask instead of guessing.
+2. Read the exact Task. If its state is already in `completedStates`, report the no-op and do not create a plan.
+3. Preview the state change for the exact ID. Completing a Task books Remaining Work into Completed Work and sets Remaining Work to zero by default, so inspect those generated diffs as part of the requested completion.
+4. Do not invent time values or disable `bookRemainingTime` merely to bypass validation. Change the default only when the user explicitly requests it or an established workflow rule requires it.
+
+## Handle Failures
+
+- Surface MCP validation errors without attempting Azure CLI, application CLI, shell, or direct API fallbacks.
+- If a selector matches unexpected Tasks or a preview contains unexpected diffs, do not commit it.
+- If a commit result is uncertain, retry the same `commit_plan` call; completed commits are idempotent.
+- Keep responses compact and avoid reproducing full private descriptions unless requested.
